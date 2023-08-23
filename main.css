@@ -1,0 +1,18 @@
+*{
+    font-family: 'Courier New', Courier, monospace;
+}
+
+.button{
+    background-color: blue;
+    color: white;
+    font-weight: 800;
+    transition: 0.2s ease-in;
+    cursor: pointer;
+    user-select: none;
+    caret-color: transparent;
+    width: 200px;
+}
+
+.button.button:hover{
+    background-color: aqua;
+}

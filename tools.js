@@ -1,0 +1,207 @@
+//Set grid width
+var x = 8;
+
+//char list
+
+let string = "abcdefghijklmnop";  //qrstuvwxyz012345
+let puzzle = [];
+let directions = [0,0,0,0];            //up, down, left, right
+let wordList = [];
+
+//library
+var library = {
+    "library":
+        [   "abc",
+            "def",
+            "butts",
+            "snacks",
+            "jk"
+        ]
+};
+
+function populate(){
+    let place = document.getElementById("example");
+    place.innerHTML = "";
+    let lines = string.length/x;
+    let stopPoint = string.length % x;
+    if(stopPoint > 0){lines+=1;}
+    let line = 0;
+    let spot = 0;
+    while(line<lines){
+        for(i=0; i<x;i++){
+            place.innerHTML += string.charAt(spot);
+            puzzle[spot]=string.charAt(spot);
+            spot++;
+        }
+        place.innerHTML += "<br />";
+        line+=1;
+    }
+}
+
+function init(){
+    populate();
+    generateAllPossibleWords();
+}
+
+function generateAllPossibleWords(){
+
+    // 0  1  2  3  4  5  6  7
+    // 8  9  10 11 12 13 14 15
+    // 16 17 18 19 20 21 22 23
+    // 24 25 26 27 28 29 30 31
+    // 32 33 34 35 36 37 38 39
+
+    //if you are in the first column, i%x should be 0
+    //if you are in the last column, i%x should be x-1
+
+    //if you are in the top row, i<x
+    //if you are in the bottom row, i>puzzle.length-x
+
+    //available function - checks availability of the next location
+    //
+    // check function:
+    //      if i-x < 0                  <-- checks "top"
+    //      if i+x > puzzle.length      <-- checks "bottom"
+    //      if (i-1)%x == x-1;          <-- checks left
+    //      if (i+1)%x == 0;            <-- checks right
+    //
+    //      each condition must be false in order to allow it
+    //
+    //requires list of all indexes and true/false for each.
+    //if the index has been used then choose the next available index.
+    //requires that the pattern have not been used before.  Incrementing
+    //the index is only one way of doing it.  So, we should build a list
+    //of index walks that can be checked each time and wipe it once the
+    //total walks have been completed.
+
+    //turns are either straight, left, or right.  All possible paths are
+    //either +x, -x, +1 or -1
+    //backwards is not permitted
+    //example (word length 5):
+    //Start at 5, x=8
+    //      5, 6,   14, 15, 23
+    //      i, +1,  +x, +1, +x
+    //      5, 4,   12, 11, 10
+    //      i, -1,  +x, -1, -1
+    //example (word length 5):
+    //start at 27, x=8
+    //      27, 19, 11,  3,  2
+    //      i,  -x, -x, -x, -1
+    //      27, 19, 18, 17, 16
+    //      i,  -x, -1, -1, -1
+
+    //somehow the sequence needs to be saved.  How does the script know when all
+    //possible sequences for a location have been exhausted?
+    //When all unique sequences to the last possible sequence are created it can
+    //be ended.
+    //Sequences should be saved in an array and checked each time to see if the
+    //next attempt is possible.
+    //Store the current sequence so that you cannot repeat indexes.
+
+    let currentLetterPosition = 0;
+    
+    //1: Identify all possible base directions based on initial location.
+    //2: Move to each possible directions and identify all possible next directions based on the new position
+    //3: Move to the next position and so on.
+
+    //Each position is a Node.  From the start Node, you must proceed word.length Nodes.  When each node is assessed, the directions of the next node are determined.
+    //Sequences for each next-node possibility must be created.
+    //Construct a primary array based on all possible node directions from the primary node.
+    //Proceed to the first secondary node and build the first secondary array within the first index of the primary array based on all possible node directions from the secondary node.
+    //Proceed to the tertiary node... etc.
+    //When the final node is complete, back up with the full first tertiary array to the secondary node and create the second secondary array
+
+    
+    let word;
+    let node1 = [];
+    let node2 = [];
+    let node3 = [];
+    let node4 = [];
+    let node5 = [];
+    let node6 = [];
+    let node7 = [];
+    let node8 = [];
+
+    for(var i=0;i<puzzle.length;i++){
+        node1[i]=i;
+        for(var j = 0; j<4; j++){
+            generateDirections(node1[i]);
+
+            if(!outOfBounds(node1[i], directions[j])){
+                node2[j]=directions[j];
+            }
+            else node2[j] = false;
+
+            if(node2[j] != false){
+                for(var k = 0; k<4; k++){
+                    generateDirections(node2[j]);
+
+                    if(!outOfBounds(node2[j],directions[k])&&node1[i]!=directions[k]){
+                        node3[k]=directions[k];
+                    }
+                    else node3[k] = false;
+
+                    if(node3[k]!=false){
+                        for(var m = 0; m<4; m++){
+                            generateDirections(node3[k]);
+                            if(!outOfBounds(node3[k],directions[m])&&node2[j]!=directions[m]){
+                                node4[m]=directions[m];
+                            }
+                            else node4[m]=false;
+                            if(node4[m]!=false){
+                                word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]]+puzzle[node4[m]];
+                                wordList.push(word);
+                            }
+                        }   
+                    }
+
+                    if(node3[k] != false){
+                        word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]];
+                        wordList.push(word);
+                    }
+                }
+
+                if(node2[k] != false){
+                    word = puzzle[node1[i]]+puzzle[node2[j]];
+                    wordList.push(word);
+                }
+            }
+        }
+    }
+    console.log(wordList);
+
+}
+
+//      if i-x < 0                  <-- checks "top"
+//      if i+x > puzzle.length      <-- checks "bottom"
+//      if (i-1)%x == x-1;          <-- checks left
+//      if (i+1)%x == 0;            <-- checks right
+
+function outOfBounds(now, next){
+    if(next<0){return true;}                            //check top
+    else if(next>=puzzle.length){return true;}           //check bottom
+    else if(now%x==0&&next%x==x-1){return true;}        //check left
+    else if(now%x==x-1&&next%x==0){return true;}        //check right
+    else return false;
+}
+
+function generateDirections(i){
+    directions[0] = i-x;        //up
+    directions[1] = i+x;        //down
+    directions[2] = i-1;        //left
+    directions[3] = i+1;        //right
+}
+
+function checkLibrary(){
+    wordList.forEach(element => {
+        for(var i = 0; i<library["library"].length;i++){
+            if(element == library["library"][i]){
+                console.log(`YES! The found word is: ${element}`);
+                document.getElementById("output").innerHTML += `Found: ${element} <br>`;
+            }
+        }
+    });
+}
+//  length = 3 
+//  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
+//                                                                                                                          generate directions for 2  [-6, 10, 1, 3]   Possible [10, 1, 3]
