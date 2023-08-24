@@ -3,21 +3,12 @@ var x = 8;
 
 //char list
 
-let string = "abcdefghijklmnop";  //qrstuvwxyz012345
+let string = "abtsefghiutlmnopqrstuvwxyznoedcf";  //qrstuvwxyz012345
 let puzzle = [];
 let directions = [0,0,0,0];            //up, down, left, right
 let wordList = [];
 
-//library
-var library = {
-    "library":
-        [   "abc",
-            "def",
-            "butts",
-            "snacks",
-            "jk"
-        ]
-};
+//library exists in words.js
 
 function populate(){
     let place = document.getElementById("example");
@@ -61,7 +52,7 @@ function generateAllPossibleWords(){
     //
     // check function:
     //      if i-x < 0                  <-- checks "top"
-    //      if i+x > puzzle.length      <-- checks "bottom"
+    //      if i+x >= puzzle.length      <-- checks "bottom"
     //      if (i-1)%x == x-1;          <-- checks left
     //      if (i+1)%x == 0;            <-- checks right
     //
@@ -194,8 +185,8 @@ function generateDirections(i){
 
 function checkLibrary(){
     wordList.forEach(element => {
-        for(var i = 0; i<library["library"].length;i++){
-            if(element == library["library"][i]){
+        for(var i = 0; i<library.length;i++){
+            if(element.toUpperCase() == library[i].toUpperCase()){
                 console.log(`YES! The found word is: ${element}`);
                 document.getElementById("output").innerHTML += `Found: ${element} <br>`;
             }
