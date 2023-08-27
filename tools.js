@@ -187,11 +187,23 @@ function generateDirections(i){
 }
 
 function checkLibrary(){
+    let out = document.getElementById("output");
+    out.innerHTML = "";
+    let trouble = document.getElementById("bad-output");
+    trouble.innerHTML = "";
     wordList.forEach(element => {
         for(var i = 0; i<library.length;i++){
             if(element.toUpperCase() == library[i].toUpperCase()){
                 console.log(`YES! The found word is: ${element}`);
-                document.getElementById("output").innerHTML += `Found: ${element} <br>`;
+                out.innerHTML += `Found: ${element} <br>`;
+            }
+        }
+    });
+    wordList.forEach(element => {
+        for(var i = 0; i<library2.length;i++){
+            if(element.toUpperCase() == library2[i].toUpperCase()){
+                console.log(`YES! The found word is: ${element}`);
+                trouble.innerHTML += `Found: ${element} <br>`;
             }
         }
     });
@@ -223,6 +235,8 @@ function update(){
         [...all].forEach(setRowLength);
     }
     init();
+    document.getElementById("output").innerHTML = "Updated";
+    document.getElementById("bad-output").innerHTML = "Clear";
 }
 
 function setRowLength(item, index){
