@@ -1,6 +1,6 @@
 //Set grid width
 var x = 8;
-
+var rows = 1;
 //char list
 
 let string = "abtsefghiutlmnopqrstuvwxyznoedcf";  //qrstuvwxyz012345
@@ -27,9 +27,11 @@ function populate(){
         place.innerHTML += "<br />";
         line+=1;
     }
+    puzzle.length = string.length;
 }
 
 function init(){
+    wordList.length = 0;
     populate();
     generateAllPossibleWords();
 }
@@ -112,7 +114,7 @@ function generateAllPossibleWords(){
     let node6 = [];
     let node7 = [];
     let node8 = [];
-
+    let rawList = [];
     for(var i=0;i<puzzle.length;i++){
         node1[i]=i;
         for(var j = 0; j<4; j++){
@@ -141,24 +143,25 @@ function generateAllPossibleWords(){
                             else node4[m]=false;
                             if(node4[m]!=false){
                                 word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]]+puzzle[node4[m]];
-                                wordList.push(word);
+                                rawList.push(word);
                             }
                         }   
                     }
 
                     if(node3[k] != false){
                         word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]];
-                        wordList.push(word);
+                        rawList.push(word);
                     }
                 }
 
                 if(node2[k] != false){
                     word = puzzle[node1[i]]+puzzle[node2[j]];
-                    wordList.push(word);
+                    rawList.push(word);
                 }
             }
         }
     }
+    wordList = [...new Set(rawList)];
     console.log(wordList);
 
 }
@@ -196,3 +199,37 @@ function checkLibrary(){
 //  length = 3 
 //  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
 //                                                                                                                          generate directions for 2  [-6, 10, 1, 3]   Possible [10, 1, 3]
+
+function addRow(){
+    rows++;
+    let label = document.createElement("LABEL");
+    label.innerHTML = `Row ${rows}: `;
+    let k = document.createElement("input");
+    let br = document.createElement("br");
+    let g = document.getElementById("puzzle-create");
+    g.appendChild(br);
+    g.appendChild(label);
+    g.appendChild(k);
+}
+
+function update(){
+    let container = document.getElementById("puzzle-create");
+    let all = container.getElementsByTagName("input");
+    string = "";
+    for(let i=0; i<all.length; i++){
+        string += all[i].value;
+    }
+    if(all.length>1){
+        [...all].forEach(setRowLength);
+    }
+    init();
+}
+
+function setRowLength(item, index){
+    if(index==0){
+        x=item.value.length;
+    }
+    else if(index>0){
+        if(item.value.length!=x){alert("Rows must be same length");}
+    }
+}
