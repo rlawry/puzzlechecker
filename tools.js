@@ -11,7 +11,7 @@ let wordList = [];
 //library exists in words.js
 
 function populate(){
-    let place = document.getElementById("example");
+    let place = document.getElementById("puzzle");
     place.innerHTML = "";
     let lines = string.length/x;
     let stopPoint = string.length % x;
@@ -187,22 +187,28 @@ function generateDirections(i){
 }
 
 function checkLibrary(){
+    let normal = document.getElementById("normal-check").checked;
     let out = document.getElementById("output");
     out.innerHTML = "";
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
-    wordList.forEach(element => {
-        for(var i = 0; i<library.length;i++){
-            if(element.toUpperCase() == library[i].toUpperCase()){
-                console.log(`YES! The found word is: ${element}`);
-                out.innerHTML += `Found: ${element} <br>`;
+    if(normal){
+        wordList.forEach(element => {
+            for(var i = 0; i<library.length;i++){
+                if(element.toUpperCase() == library[i].toUpperCase()){
+                    //console.log(`YES! The found word is: ${element}`);
+                    out.innerHTML += `Found: ${element} <br>`;
+                }
             }
-        }
-    });
+        });
+    }
+    else{
+        out.innerHTML = "Normal not checked";
+    }
     wordList.forEach(element => {
         for(var i = 0; i<library2.length;i++){
             if(element.toUpperCase() == library2[i].toUpperCase()){
-                console.log(`YES! The found word is: ${element}`);
+                //console.log(`YES! The found word is: ${element}`);
                 trouble.innerHTML += `Found: ${element} <br>`;
             }
         }
