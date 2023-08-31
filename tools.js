@@ -220,11 +220,14 @@ function generateDirections(i, list){
 }
 
 function checkLibrary(){
+    const start = performance.now();
     let normal = document.getElementById("normal-check").checked;
     let out = document.getElementById("output");
     out.innerHTML = "";
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
+    console.log(library.length);
+    console.log(library2.length);
     if(normal){
         wordList.forEach(element => {
             for(var i = 0; i<library.length;i++){
@@ -248,6 +251,8 @@ function checkLibrary(){
             }
         }
     });
+    const elapsed = (performance.now() - start);
+    document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
 }
 //  length = 3 
 //  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
