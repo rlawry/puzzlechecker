@@ -1,9 +1,9 @@
 //Set grid width
-var x = 8;
+var x = 10;
 var rows = 1;
 //char list
 
-let string = "abcdefghijklmnopqrstuvwxyznabcde";  //qrstuvwxyz012345
+let string = "petescriptpetescriptpetescriptpetescript";  //qrstuvwxyz012345
 let puzzle = [];
 let directions = [0,0,0,0];            //up, down, left, right
 let wordList = [];
@@ -189,9 +189,7 @@ function generateAllPossibleWords(){
                 word = puzzle[node1[i]]+puzzle[node2[j]];
                 rawList.push(word.toUpperCase());
             }
-            //if it is out of bounds, set that direction to false
             else node2[j] = false;
-            //if the current direction isn't false, continue on to the next node.
         }
     }
     wordList = [...new Set(rawList)];
