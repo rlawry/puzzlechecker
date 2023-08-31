@@ -3,7 +3,7 @@ var x = 8;
 var rows = 1;
 //char list
 
-let string = "abtsefghiutlmnopqrstuvwxyznoedcf";  //qrstuvwxyz012345
+let string = "abcdefghijklmnopqrstuvwxyznabcde";  //qrstuvwxyz012345
 let puzzle = [];
 let directions = [0,0,0,0];            //up, down, left, right
 let wordList = [];
@@ -226,14 +226,15 @@ function checkLibrary(){
     out.innerHTML = "";
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
-    console.log(library.length);
-    console.log(library2.length);
+    let bad = 0;
+    let total = 0;
     if(normal){
         wordList.forEach(element => {
             for(var i = 0; i<library.length;i++){
                 if(element == library[i]){
                     //console.log(`YES! The found word is: ${element}`);
                     out.innerHTML += `Found: ${element} <br>`;
+                    total++;
                 }
             }
         });
@@ -247,10 +248,13 @@ function checkLibrary(){
                 if(element.toUpperCase() == library2[i].toUpperCase()){
                     //console.log(`YES! The found word is: ${element}`);
                     trouble.innerHTML += `Found: ${element} <br>`;
+                    bad++;
                 }
             }
         }
     });
+    trouble.innerHTML += `${bad} bad words found.`;
+    out.innerHTML += `${total} words found.`;
     const elapsed = (performance.now() - start);
     document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
 }
