@@ -173,21 +173,21 @@ function generateAllPossibleWords(){
                                     if(!outOfBounds(l4,node4Directions[n])&&l3!=node4Directions[n]&&l2!=node4Directions[n]&&l1!=node4Directions[n]){
                                         l5=node4Directions[n];
                                         word = puzzle[l1]+puzzle[l2]+puzzle[l3]+puzzle[l4]+puzzle[l5];
-                                        rawList.push(word);
+                                        rawList.push(word.toUpperCase());
                                     }
                                 }
                                 word = puzzle[l1]+puzzle[l2]+puzzle[l3]+puzzle[l4];
-                                rawList.push(word);
+                                rawList.push(word.toUpperCase());
                             }
                             else node4[m]=false;
                         }
                         word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]];
-                        rawList.push(word);   
+                        rawList.push(word.toUpperCase());   
                     }
                     else node3[k] = false;
                 }
                 word = puzzle[node1[i]]+puzzle[node2[j]];
-                rawList.push(word);
+                rawList.push(word.toUpperCase());
             }
             //if it is out of bounds, set that direction to false
             else node2[j] = false;
@@ -228,7 +228,7 @@ function checkLibrary(){
     if(normal){
         wordList.forEach(element => {
             for(var i = 0; i<library.length;i++){
-                if(element.toUpperCase() == library[i].toUpperCase()){
+                if(element == library[i]){
                     //console.log(`YES! The found word is: ${element}`);
                     out.innerHTML += `Found: ${element} <br>`;
                 }
