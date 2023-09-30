@@ -1,9 +1,9 @@
 //Set grid width
-var x = 8;
+var x = 10;
 var rows = 1;
 //char list
 
-let string = "abtsefghiutlmnopqrstuvwxyznoedcf";  //qrstuvwxyz012345
+let string = "petescriptpetescriptpetescriptpetescript";  //qrstuvwxyz012345
 let puzzle = [];
 let directions = [0,0,0,0];            //up, down, left, right
 let wordList = [];
@@ -90,8 +90,6 @@ function generateAllPossibleWords(){
     //Sequences should be saved in an array and checked each time to see if the
     //next attempt is possible.
     //Store the current sequence so that you cannot repeat indexes.
-
-    let currentLetterPosition = 0;
     
     //1: Identify all possible base directions based on initial location.
     //2: Move to each possible directions and identify all possible next directions based on the new position
@@ -107,58 +105,91 @@ function generateAllPossibleWords(){
     
     let word;
     let node1 = [];
+    let node1Directions = [0,0,0,0];
     let node2 = [];
+    let node2Directions = [0,0,0,0];
     let node3 = [];
+    let node3Directions = [0,0,0,0];
     let node4 = [];
+    let node4Directions = [0,0,0,0];
     let node5 = [];
+    let note5Directions = [0,0,0,0];
     let node6 = [];
     let node7 = [];
     let node8 = [];
     let rawList = [];
-    for(var i=0;i<puzzle.length;i++){
+
+    //node1 goes with i
+    //node2 goes with j
+    //node3 goes with k
+    //node4 goes with m
+    //node5 goes with n
+
+    //i initialization for node 1
+
+    //out of bounds is anything that goes beyond an edge.  You need to know where you are and where you will be due to left and right.
+    //where you are is the previous node
+    //where you will be is the current direction selection
+
+    let l1,l2,l3,l4,l5;
+    let n1,n2,n3,n4,n5;
+
+    for(var i=0;i<puzzle.length;i++){           
         node1[i]=i;
+        l1 = i;
+        //j initialization for node 2
         for(var j = 0; j<4; j++){
-            generateDirections(node1[i]);
-
-            if(!outOfBounds(node1[i], directions[j])){
-                node2[j]=directions[j];
+            //if its the first instance, generate the directions
+            if(j==0){
+                generateDirections(l1,node1Directions);
             }
-            else node2[j] = false;
-
-            if(node2[j] != false){
+            //check the direction to see if its not out of bounds
+            if(!outOfBounds(l1, node1Directions[j])){
+                node2[j]=node1Directions[j];
+                    //simplify the location of the current node
+                l2 = node2[j];
+                //k initialization for node 3
                 for(var k = 0; k<4; k++){
-                    generateDirections(node2[j]);
 
-                    if(!outOfBounds(node2[j],directions[k])&&node1[i]!=directions[k]){
-                        node3[k]=directions[k];
+                    if(k==0){
+                        generateDirections(l2,node2Directions);
                     }
-                    else node3[k] = false;
-
-                    if(node3[k]!=false){
+                    if(!outOfBounds(l2,node2Directions[k])&&l1!=node2Directions[k]){
+                        node3[k]=node2Directions[k];
+                        l3 = node3[k];
+                        //m initialization for node 4
                         for(var m = 0; m<4; m++){
-                            generateDirections(node3[k]);
-                            if(!outOfBounds(node3[k],directions[m])&&node2[j]!=directions[m]){
-                                node4[m]=directions[m];
+                            if(m==0){
+                                generateDirections(l3,node3Directions);
+                            }
+                            if(!outOfBounds(l3,node3Directions[m])&&l2!=node3Directions[m]){
+                                node4[m]=node3Directions[m];
+                                l4 = node4[m];
+                                //m initialization for node 5
+                                for(var n = 0;n<4;n++){
+                                    if(n==0){
+                                        generateDirections(l4,node4Directions);
+                                    }
+                                    if(!outOfBounds(l4,node4Directions[n])&&l3!=node4Directions[n]&&l2!=node4Directions[n]&&l1!=node4Directions[n]){
+                                        l5=node4Directions[n];
+                                        word = puzzle[l1]+puzzle[l2]+puzzle[l3]+puzzle[l4]+puzzle[l5];
+                                        rawList.push(word.toUpperCase());
+                                    }
+                                }
+                                word = puzzle[l1]+puzzle[l2]+puzzle[l3]+puzzle[l4];
+                                rawList.push(word.toUpperCase());
                             }
                             else node4[m]=false;
-                            if(node4[m]!=false){
-                                word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]]+puzzle[node4[m]];
-                                rawList.push(word);
-                            }
-                        }   
-                    }
-
-                    if(node3[k] != false){
+                        }
                         word = puzzle[node1[i]]+puzzle[node2[j]]+puzzle[node3[k]];
-                        rawList.push(word);
+                        rawList.push(word.toUpperCase());   
                     }
+                    else node3[k] = false;
                 }
-
-                if(node2[k] != false){
-                    word = puzzle[node1[i]]+puzzle[node2[j]];
-                    rawList.push(word);
-                }
+                word = puzzle[node1[i]]+puzzle[node2[j]];
+                rawList.push(word.toUpperCase());
             }
+            else node2[j] = false;
         }
     }
     wordList = [...new Set(rawList)];
@@ -179,25 +210,29 @@ function outOfBounds(now, next){
     else return false;
 }
 
-function generateDirections(i){
-    directions[0] = i-x;        //up
-    directions[1] = i+x;        //down
-    directions[2] = i-1;        //left
-    directions[3] = i+1;        //right
+function generateDirections(i, list){
+    list[0] = i-x;        //up
+    list[1] = i+x;        //down
+    list[2] = i-1;        //left
+    list[3] = i+1;        //right
 }
 
 function checkLibrary(){
+    const start = performance.now();
     let normal = document.getElementById("normal-check").checked;
     let out = document.getElementById("output");
     out.innerHTML = "";
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
+    let bad = 0;
+    let total = 0;
     if(normal){
         wordList.forEach(element => {
             for(var i = 0; i<library.length;i++){
-                if(element.toUpperCase() == library[i].toUpperCase()){
+                if(element == library[i]){
                     //console.log(`YES! The found word is: ${element}`);
                     out.innerHTML += `Found: ${element} <br>`;
+                    total++;
                 }
             }
         });
@@ -207,12 +242,19 @@ function checkLibrary(){
     }
     wordList.forEach(element => {
         for(var i = 0; i<library2.length;i++){
-            if(element.toUpperCase() == library2[i].toUpperCase()){
-                //console.log(`YES! The found word is: ${element}`);
-                trouble.innerHTML += `Found: ${element} <br>`;
+            if(library2[i].length<6){
+                if(element.toUpperCase() == library2[i].toUpperCase()){
+                    //console.log(`YES! The found word is: ${element}`);
+                    trouble.innerHTML += `Found: ${element} <br>`;
+                    bad++;
+                }
             }
         }
     });
+    trouble.innerHTML += `${bad} bad words found.`;
+    out.innerHTML += `${total} words found.`;
+    const elapsed = (performance.now() - start);
+    document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
 }
 //  length = 3 
 //  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
