@@ -29,22 +29,31 @@ function populate(){
     if(stopPoint > 0){lines+=1;}
     let line = 0;
     let spot = 0;
-    while(line<lines){
-        for(i=0; i<x;i++){
-            place.innerHTML += string.charAt(spot);
-            puzzle[spot]=string.charAt(spot);
+    while(line<grid.length){
+        for(let i=0; i<grid[line].length;i++){
+            place.innerHTML += grid[line][i];
             spot++;
         }
         place.innerHTML += "<br />";
         line+=1;
     }
-    puzzle.length = string.length;
 }
 
 function init(){
     wordList.length = 0;
     populate();
-    generateAllPossibleWords();
+    wordList = generateCombinations(grid);
+    // wordList.forEach(element => {
+    //     for(var i = 0; i<library.length;i++){
+    //         if(element == library[i]){
+    //             //console.log(`YES! The found word is: ${element}`);
+    //             out.innerHTML += `Found: ${element} <br>`;
+    //             total++;
+    //         }
+    //     }
+    // });
+    console.log(wordList.length + " number words");
+    console.log(wordList);
 }
 
 function isValidMove(x, y, prevX, prevY) {
@@ -58,64 +67,65 @@ function isValidMove(x, y, prevX, prevY) {
     return x >= 0 && x < 10 && y >= 0 && y < 10 && ((x === prevX && Math.abs(y - prevY) === 1) || (y === prevY && Math.abs(x - prevX) === 1));
 }
 
-
-function dfs(grid, visited, x, y, path, result) {
-    visited[x][y] = true;
-    path.push(grid[x][y]);
-
-    if (path.length >= 2 && path.length <= length) {
-        result.add(path.join(''));
+function generateCombinations(grid) {
+    //alert("entered");
+    const result = [];
+    const visited = new Array(10);
+    let abandon = false;
+    for (let i = 0; i < 10; i++) {
+        visited[i] = new Array(10).fill(false);
     }
-
-
-    const directions = [-1, 0, 1];
-    for (const dx of directions) {
-        for (const dy of directions) {
-            const newX = x + dx;
-            const newY = y + dy;
-            if (isValidMove(newX, newY, x, y) && !visited[newX][newY]) {
-                dfs(grid, visited, newX, newY, path, result);
+    function dfs(x, y, path, length, visited) {
+        //alert(path);
+        visited[x][y] = true;
+        path.push(grid[x][y]);
+    
+        if (path.length >= 5 && path.length <= length) {
+            const combination = path.join('');
+            const regexPattern = new RegExp(combination, "i");
+            const exists = library.filter(str => regexPattern.test(str));
+            if(exists.length > 0){
+                result.add(combination);
+            } 
+            else{
+                abandon = true;
             }
         }
-    }
-
-    if (path.length <= length) {
-        const directions = [-1, 0, 1];
-        for (const dx of directions) {
-            for (const dy of directions) {
-                const newX = x + dx;
-                const newY = y + dy;
-                if (isValidMove(newX, newY, x, y) && !visited[newX][newY]) {
-                    dfs(grid, visited, newX, newY, path, result, length);
+    
+        if (path.length < length) {
+            const directions = [-1, 0, 1];
+            for (const dx of directions) {
+                for (const dy of directions) {
+                    const newX = x + dx;
+                    const newY = y + dy;
+                    if (isValidMove(newX, newY, x, y) && !visited[newX][newY]) {
+                        dfs(newX, newY, path.concat(grid[newX][newY]), length, visited);
+                    }
                 }
             }
         }
+    
+        visited[x][y] = false;
+        path.pop();
     }
 
-    visited[x][y] = false;
-    path.pop();
-}
 
-function generateCombinations(grid) {
-    const result = new Set();
-
-    for (let length = 5; length <= 100; length++) {
+    for (let length = 5; length <= 18; length++) {
         for (let i = 0; i < 10; i++) {
             for (let j = 0; j < 10; j++) {
-                const visited = Array.from(Array(10), () => Array(10).fill(false));
-                dfs(grid, visited, i, j, [], result, length);
+                
+                dfs(i, j, [grid[i][j]], length, visited);
             }
+            //alert(i);
         }
     }
+    console.log(result);
+    const uniqueCombinations = Array.from(new Set(result));
 
-    return Array.from(result);
+    return uniqueCombinations;
 }
 
 // Example usage:
-
-
-const combinations = generateCombinations(grid);
-console.log(combinations);
 
 
 function checkLibrary(){
