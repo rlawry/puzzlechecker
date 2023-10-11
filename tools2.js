@@ -1,5 +1,5 @@
 //Set grid width
-var x = 10;
+var rowLength = 10;
 var rows = 1;
 //char list
 
@@ -59,27 +59,35 @@ function addRow(){
 function update(){
     let container = document.getElementById("puzzle-create");
     let all = container.getElementsByTagName("input");
-    for(let i=0; i<all.length; i++){
-        for(let j=0;j<all[i].value.length;j++){
+    const rows = all.length;
+    const cols = all[0].value.toString().length;
+
+    for(let i=0; i<rows; i++){
+        grid[i] = new Array(cols).fill('');
+        for(let j=0;j<cols;j++){
+            console.log(grid);
             grid[i][j] = all[i].value.charAt(j);
         }
-        grid[i].length = all[i].value.length;
+        grid[i].length = cols;
     }
+
     if(all.length>1){
         [...all].forEach(setRowLength);
     }
-    grid.length = all.length;
+
+    console.log(grid);
     init();
     document.getElementById("output").innerHTML = "Updated";
     document.getElementById("bad-output").innerHTML = "Clear";
+    
 }
 
 function setRowLength(item, index){
     if(index==0){
-        x=item.value.length;
+        rowLength=item.value.length;
     }
     else if(index>0){
-        if(item.value.length!=x){alert("Rows must be same length");}
+        if(item.value.length!=rowLength){alert("Rows must be same length");}
     }
 }
 
@@ -98,8 +106,8 @@ function generateCombinations(grid) {
     console.log(count + " dictionary words");
     //depth-first-search function, recursive
 
-    function dfs(x, y, path, length, visited) {
-           visited[x][y] = true;
+    function dfs(row, col, path, length, visited) {
+           visited[row][col] = true;
 
             const currentCombination = path.join('');
 
@@ -111,9 +119,9 @@ function generateCombinations(grid) {
                 const directions = [-1, 0, 1];
                 for (const dx of directions) {
                     for (const dy of directions) {
-                        const newX = x + dx;
-                        const newY = y + dy;
-                        if (isValidMove(newX, newY, x, y) && !visited[newX][newY]) {
+                        const newX = row + dx;
+                        const newY = col + dy;
+                        if (isValidMove(newX, newY, row, col) && !visited[newX][newY]) {
                             const tempTest = currentCombination + grid[newX][newY];
                             if(dictionaryTrie.isAnyWordStartingWith(tempTest)){
                                 dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictionaryTrie);
@@ -123,32 +131,41 @@ function generateCombinations(grid) {
                 }
             }
 
-        visited[x][y] = false;
+        visited[row][col] = false;
     }
 
-    const visited = new Array(10);
-    for (let i = 0; i < 10; i++) {
-        visited[i] = new Array(10).fill(false);
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const visited = new Array(rows);
+    for (let i = 0; i < rows; i++) {
+        visited[i] = new Array(cols);
+        for(let j = 0; j<cols; j++) {
+            visited[i][j] = false;
+            console.log(visited[i][j] + " i sub j");
+        }
+        console.log(visited[i]);
     }
-
-    for (let i = 0; i < 10; i++) {
-        for (let j = 0; j < 10; j++) {
-            dfs(i, j, [grid[i][j]], 100, visited, dictionaryTrie);
+    console.log(rows*cols + " rows and cols");
+    console.log(visited);
+    console.log(rows + " rows and " + cols + " cols");
+    for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+            dfs(i, j, [grid[i][j]], rows*cols, visited, dictionaryTrie);
         }
     }
 
     return Array.from(result);
 }
 
-function isValidMove(x, y, prevX, prevY) {
+function isValidMove(row, col, prevRow, prevCol) {
     // Parameters:
-    // x, y: Current coordinates of the cell we want to move to.
-    // prevX, prevY: Coordinates of the previous cell we moved from.
+    // row, col: Current coordinates of the cell we want to move to.
+    // prevRow, prevCol: Coordinates of the previous cell we moved from.
 
-    // Check if the new coordinates (x, y) are within the grid boundaries (0 to 9).
+    // Check if the new coordinates (row, col) are within the grid boundaries (0 to 9).
     // Also, check if the move is within a distance of 1 cell in both horizontal and vertical directions.
-    // Disallow diagonal moves by ensuring that either x or y must be the same as prevX or prevY, respectively.
-    return x >= 0 && x < 10 && y >= 0 && y < 10 && ((x === prevX && Math.abs(y - prevY) === 1) || (y === prevY && Math.abs(x - prevX) === 1));
+    // Disallow diagonal moves by ensuring that either row or col must be the same as prevRow or prevCol, respectively.
+    return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length && ((row === prevRow && Math.abs(col - prevCol) === 1) || (col === prevCol && Math.abs(row - prevRow) === 1));
 }
 
 function spitOutTheWords(list){
