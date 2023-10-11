@@ -49,6 +49,7 @@
 .puzzle{
     text-align: center;
     background-color: antiquewhite;
+    letter-spacing: 0.2rem;
     box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
     width: 300px;
 }
