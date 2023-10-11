@@ -126,19 +126,14 @@ function generateCombinations(grid) {
         visited[x][y] = false;
     }
 
-    const visited = new Array(grid.length);
-    for (let i = 0; i < grid.length; i++) {
-        visited[i] = new Array(grid[0].length);
-        for(let j = 0; j < grid[0].length; j++){
-            visited[i][j] = false;
-        }
+    const visited = new Array(10);
+    for (let i = 0; i < 10; i++) {
+        visited[i] = new Array(10).fill(false);
     }
-    console.log(visited);
-    alert("read");
 
-    for (let i = 0; i < grid.length; i++) {
-        for (let j = 0; j < grid[i].length; j++) {
-            dfs(i, j, [grid[i][j]], grid[0].length*grid.length, visited, dictionaryTrie);
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+            dfs(i, j, [grid[i][j]], 100, visited, dictionaryTrie);
         }
     }
 
@@ -153,8 +148,7 @@ function isValidMove(x, y, prevX, prevY) {
     // Check if the new coordinates (x, y) are within the grid boundaries (0 to 9).
     // Also, check if the move is within a distance of 1 cell in both horizontal and vertical directions.
     // Disallow diagonal moves by ensuring that either x or y must be the same as prevX or prevY, respectively.
-    console.log(grid.length + " grid length and " + grid[0].length + " grid0.length")
-    return x >= 0 && x < grid[0].length && y >= 0 && y < grid.length && ((x === prevX && Math.abs(y - prevY) === 1) || (y === prevY && Math.abs(x - prevX) === 1));
+    return x >= 0 && x < 10 && y >= 0 && y < 10 && ((x === prevX && Math.abs(y - prevY) === 1) || (y === prevY && Math.abs(x - prevX) === 1));
 }
 
 function spitOutTheWords(list){
