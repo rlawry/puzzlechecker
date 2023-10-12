@@ -269,7 +269,7 @@ function spitOutTheWords(){
     });
 
     out.innerHTML += `${total} words found`;
-    trouble.innerHTML += `${bad} words found`;
+    trouble.innerHTML += `${bad} bad words found`;
 }
 
 function showResults(){
