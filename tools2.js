@@ -5,10 +5,11 @@ var rows = 1;
 
 let directions = [0,0,0,0];            //up, down, left, right
 let wordList = [];
+let badWordList = [];
 
 const grid = [
     ['A', 'P', 'P', 'L', 'E', 'F', 'G', 'H', 'I', 'J'],
-    ['D', 'I', 'S', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'],
+    ['D', 'I', 'S', 'N', 'G', 'A', 'Q', 'R', 'S', 'T'],
     ['U', 'V', 'C', 'A', 'Y', 'E', 'N', 'B', 'C', 'D'],
     ['E', 'F', 'G', 'R', 'I', 'J', 'I', 'L', 'M', 'N'],
     ['O', 'P', 'Q', 'D', 'I', 'T', 'X', 'V', 'W', 'X'],
@@ -98,7 +99,10 @@ function init(){
     loadTrie();
 
     wordList.length = 0;
-    wordList = generateCombinations(grid);
+    wordList = generateCombinations(grid, dictionaryTrie);
+
+    badWordList.length = 0;
+    badWordList = generateCombinations(grid, badTrie);
 
     spitOutTheWords(wordList);
 
@@ -150,13 +154,14 @@ function update(){
         }
 
         populate();
-        console.log(grid);
-        wordList.length = 0;
-        console.log("Before: " + wordList);
-        wordList = generateCombinations(grid);
-        console.log("After: " + wordList);
 
-        setTimeout(checkLibrary,1000);
+        wordList.length = 0;
+        wordList = generateCombinations(grid, dictionaryTrie);
+
+        badWordList.length = 0;
+        badWordList = generateCombinations(grid, badTrie);
+
+        checkAll();
 
         document.getElementById("output").innerHTML = "Updated";
         document.getElementById("bad-output").innerHTML = "Clear";
@@ -170,7 +175,7 @@ function update(){
     }
 }
 
-function generateCombinations(grid) {
+function generateCombinations(grid, dictTrie) {
     const result = new Set();
     //depth-first-search function, recursive
     const short = document.getElementById("full-check").checked;
@@ -180,10 +185,10 @@ function generateCombinations(grid) {
 
             const currentCombination = path.join('');
             
-            if(short && path.length<5 && dictionaryTrie.isWord(currentCombination)){
+            if(short && path.length<5 && dictTrie.isWord(currentCombination)){
                 result.add(currentCombination);
             }
-            else if (path.length >= 5 && path.length <= length && dictionaryTrie.isWord(currentCombination)) {
+            else if (path.length >= 5 && path.length <= length && dictTrie.isWord(currentCombination)) {
                 result.add(currentCombination);
             }
             if (path.length < length) {
@@ -194,8 +199,8 @@ function generateCombinations(grid) {
                         const newY = col + dy;
                         if (isValidMove(newX, newY, row, col) && !visited[newX][newY]) {
                             const tempTest = currentCombination + grid[newX][newY];
-                            if(dictionaryTrie.isAnyWordStartingWith(tempTest)){
-                                dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictionaryTrie);
+                            if(dictTrie.isAnyWordStartingWith(tempTest)){
+                                dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictTrie);
                             }
                         }
                     }
@@ -217,7 +222,7 @@ function generateCombinations(grid) {
 
     for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-            dfs(i, j, [grid[i][j]], rows*cols, visited, dictionaryTrie);
+            dfs(i, j, [grid[i][j]], rows*cols, visited, dictTrie);
         }
     }
 
@@ -246,56 +251,70 @@ function spitOutTheWords(list){
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
     let bad = 0;
-    wordList.forEach(element => {
+    badWordList.forEach(element => {
         for(var i = 0; i<library2.length;i++){
-            if(library2[i].length<6){
-                if(element.toUpperCase() == library2[i].toUpperCase()){
-                    //console.log(`YES! The found word is: ${element}`);
-                    trouble.innerHTML += `Found: ${element} <br>`;
-                    bad++;
-                }
+            if(element.toUpperCase() == library2[i].toUpperCase()){
+                //console.log(`YES! The found word is: ${element}`);
+                trouble.innerHTML += `Found: ${element} <br>`;
+                bad++;
             }
         }
     });
 }
 
-function checkLibrary(){
+function checkAll(){
+    setTimeout(checkLibrary("normal"),1000);
+    setTimeout(checkLibrary("bad"),2000);
+}
+
+function checkLibrary(inst){
 
     const start = performance.now();
-    wordList.length = 0;
-    wordList = generateCombinations(grid);
-    let normal = document.getElementById("normal-check").checked;
-    let out = document.getElementById("output");
-    out.innerHTML = "";
     let trouble = document.getElementById("bad-output");
+    let out = document.getElementById("output");
+
+    out.innerHTML = "";  
     trouble.innerHTML = "";
+
     let bad = 0;
     let total = 0;
-    if(normal){
-        wordList.forEach(element => {
-            for(var i = 0; i<library.length;i++){
-                if(element == library[i]){
-                    //console.log(`YES! The found word is: ${element}`);
-                    out.innerHTML += `Found: ${element} <br>`;
-                    total++;
+
+    if(inst == "normal"){
+        wordList.length = 0;
+        wordList = generateCombinations(grid, dictionaryTrie);
+
+        let normalDictionaryActive = document.getElementById("normal-check").checked;
+
+        if(normalDictionaryActive){
+            wordList.forEach(element => {
+                for(var i = 0; i<library.length;i++){
+                    if(element == library[i]){
+                        //console.log(`YES! The found word is: ${element}`);
+                        out.innerHTML += `Found: ${element} <br>`;
+                        total++;
+                    }
                 }
-            }
-        });
+            });
+        }
+        else{
+            out.innerHTML = "Normal not checked";
+        }
     }
-    else{
-        out.innerHTML = "Normal not checked";
-    }
-    wordList.forEach(element => {
-        for(var i = 0; i<library2.length;i++){
-            if(library2[i].length<6){
+    else if(inst == "bad"){
+        badWordList.length = 0;
+        badWordList = generateCombinations(grid, badTrie);
+
+        badWordList.forEach(element => {
+            for(var i = 0; i<library2.length;i++){
                 if(element.toUpperCase() == library2[i].toUpperCase()){
                     //console.log(`YES! The found word is: ${element}`);
                     trouble.innerHTML += `Found: ${element} <br>`;
                     bad++;
                 }
             }
-        }
-    });
+        });
+    }
+
     trouble.innerHTML += `${bad} bad words found.`;
     out.innerHTML += `${total} words found.`;
     const elapsed = (performance.now() - start);
