@@ -18,6 +18,24 @@
     background-color: aliceblue;
 }
 
+.dropdown-container {
+    margin: 10px 0;
+  }
+
+select {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: pointer;
+    outline: none;
+}
+
+select:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
 .button{
     /* position: relative;
     left: 50%;

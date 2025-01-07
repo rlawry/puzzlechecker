@@ -9,7 +9,7 @@ let badWordList = [];
 
 const grid = [
     ['A', 'P', 'P', 'L', 'E', 'F', 'G', 'H', 'I', 'J'],
-    ['D', 'I', 'S', 'N', 'G', 'A', 'Q', 'R', 'S', 'T'],
+    ['D', 'I', 'S', 'N', 'N', 'A', 'Q', 'R', 'S', 'T'],
     ['U', 'V', 'C', 'A', 'Y', 'E', 'N', 'B', 'C', 'D'],
     ['E', 'F', 'G', 'R', 'I', 'J', 'I', 'L', 'M', 'N'],
     ['O', 'P', 'Q', 'D', 'I', 'T', 'X', 'V', 'W', 'X'],
@@ -19,6 +19,23 @@ const grid = [
     ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'],
     ['M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V']
 ];
+
+const greekToLatinMap = {
+    0x0391: 'A', // 'Α' - Greek Alpha
+    0x0392: 'B', // 'Β' - Greek Beta
+    0x0395: 'E', // 'Ε' - Greek Epsilon
+    0x0396: 'Z', // 'Ζ' - Greek Zeta
+    0x0397: 'H', // 'Η' - Greek Eta
+    0x0399: 'I', // 'Ι' - Greek Iota
+    0x039A: 'K', // 'Κ' - Greek Kappa
+    0x039C: 'M', // 'Μ' - Greek Mu
+    0x039D: 'N', // 'Ν' - Greek Nu
+    0x039F: 'O', // 'Ο' - Greek Omicron
+    0x03A1: 'P', // 'Ρ' - Greek Rho
+    0x03A4: 'T', // 'Τ' - Greek Tau
+    0x03A5: 'Y', // 'Υ' - Greek Upsilon
+    0x03A7: 'X'  // 'Χ' - Greek Chi
+};
 
 class TrieNode {
     constructor() {
@@ -71,12 +88,15 @@ const badTrie = new Trie();
 
 function loadTrie(){
     // Insert words from the dictionary into the dictionaryTrie
+    let badCount = 0;
     for (const word of library) {
         dictionaryTrie.insert(word);
     }
     for (const badWord of library2){
-        badTrie.insert(badWord);
+        badTrie.insert(badWord.toUpperCase());
+        badCount++;
     }
+    console.log(badCount + " bad words in Trie");
 }
 
 function populate(){
@@ -94,7 +114,7 @@ function populate(){
 
 function init(){
     const start = performance.now();
-
+    addRow();
     populate();
     loadTrie();
 
@@ -104,20 +124,46 @@ function init(){
     badWordList.length = 0;
     badWordList = generateCombinations(grid, badTrie);
 
-    spitOutTheWords(wordList);
+    spitOutTheWords();
 
     const elapsed = (performance.now() - start);
     document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
 }
 
-function addRow(){
+function updateGridSize(){
+    let firstRow = false;
+    resetRows();
+    const defaultSize = document.getElementById("grid-size");
+    let rowCount = parseInt(defaultSize.value, 10);
+    for(let i = 0; i<rowCount; i++){
+        if(i == 0){
+            firstRow = true;
+        }
+        else{
+            firstRow = false;
+        }
+        addRow(firstRow);
+    }
+    rows = rowCount;
+}
+
+function resetRows(){
+    let g = document.getElementById("puzzle-create");
+    // Clear all children explicitly
+    while (g.firstChild) {
+        g.removeChild(g.firstChild);
+    }
+    rows = 0;
+}
+
+function addRow(fr){
     rows++;
     let label = document.createElement("LABEL");
     label.innerHTML = `Row ${rows}: `;
     let k = document.createElement("input");
     let br = document.createElement("br");
     let g = document.getElementById("puzzle-create");
-    g.appendChild(br);
+    if(!fr){g.appendChild(br);}
     g.appendChild(label);
     g.appendChild(k);
 }
@@ -144,6 +190,7 @@ function update(){
     if(equal){
         
         grid.length = rows;
+
         for(let i=0; i<rows; i++){
             grid[i] = new Array(cols).fill('');
         }
@@ -153,6 +200,8 @@ function update(){
             }
         }
 
+        sanitizeGrid();
+
         populate();
 
         wordList.length = 0;
@@ -161,10 +210,12 @@ function update(){
         badWordList.length = 0;
         badWordList = generateCombinations(grid, badTrie);
 
-        checkAll();
-
         document.getElementById("output").innerHTML = "Updated";
         document.getElementById("bad-output").innerHTML = "Clear";
+
+        //console.log(grid[0][5].charCodeAt(0) + " char");
+
+        showResults();
     }
     else{
 
@@ -175,37 +226,70 @@ function update(){
     }
 }
 
+function sanitizeGrid() {
+    const greekRegex = /[\u0391-\u03A9]/;
+
+    // Check the grid for any Greek characters
+    const hasGreekCharacter = grid.some(row =>
+        row.some(char => greekRegex.test(char))
+    );
+
+    if (hasGreekCharacter) {
+        console.log("Treasure found! There is a Greek character in the grid.");
+        alert("Your puzzle contains Greek Character Look-Alikes.  They will be replaced with Latin Equivalents.")
+    } else {
+        console.log("No treasure here. No Greek characters in the grid.");
+    }
+
+    // Map the grid to sanitizedGrid, replacing Greek characters with their corresponding Latin characters
+    const sanitizedGrid = grid.map(row =>
+        row.map(char => {
+            const charCode = char.codePointAt(0); // Get the Unicode code point of the character
+            console.log(`Processing character: ${char} (Unicode: ${charCode})`);
+
+            // Use the code point to lookup in the map
+            if (greekToLatinMap[charCode]) {
+                console.log(`Greek character detected: ${char} -> ${greekToLatinMap[charCode]}`);
+            }
+            return greekToLatinMap[charCode] || char; // Replace if there's a map, else keep the character
+        })
+    );
+
+    // Replace each element in the grid with the corresponding element from sanitizedGrid
+    grid.forEach((row, rowIndex) => {
+        row.forEach((_, colIndex) => {
+            row[colIndex] = sanitizedGrid[rowIndex][colIndex];
+        });
+    });
+}
+
 function generateCombinations(grid, dictTrie) {
     const result = new Set();
     //depth-first-search function, recursive
-    const short = document.getElementById("full-check").checked;
 
     function dfs(row, col, path, length, visited) {
-           visited[row][col] = true;
+        visited[row][col] = true;
 
-            const currentCombination = path.join('');
-            
-            if(short && path.length<5 && dictTrie.isWord(currentCombination)){
-                result.add(currentCombination);
-            }
-            else if (path.length >= 5 && path.length <= length && dictTrie.isWord(currentCombination)) {
-                result.add(currentCombination);
-            }
-            if (path.length < length) {
-                const directions = [-1, 0, 1];
-                for (const dx of directions) {
-                    for (const dy of directions) {
-                        const newX = row + dx;
-                        const newY = col + dy;
-                        if (isValidMove(newX, newY, row, col) && !visited[newX][newY]) {
-                            const tempTest = currentCombination + grid[newX][newY];
-                            if(dictTrie.isAnyWordStartingWith(tempTest)){
-                                dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictTrie);
-                            }
+        const currentCombination = path.join('');
+        
+        if(dictTrie.isWord(currentCombination)){
+            result.add(currentCombination);
+        }
+        if (path.length < length) {
+            const directions = [-1, 0, 1];
+            for (const dx of directions) {
+                for (const dy of directions) {
+                    const newX = row + dx;
+                    const newY = col + dy;
+                    if (isValidMove(newX, newY, row, col) && !visited[newX][newY]) {
+                        const tempTest = currentCombination + grid[newX][newY];
+                        if(dictTrie.isAnyWordStartingWith(tempTest)){
+                            dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictTrie);
                         }
                     }
                 }
             }
+        }
 
         visited[row][col] = false;
     }
@@ -240,87 +324,50 @@ function isValidMove(row, col, prevRow, prevCol) {
     return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length && ((row === prevRow && Math.abs(col - prevCol) === 1) || (col === prevCol && Math.abs(row - prevRow) === 1));
 }
 
-function spitOutTheWords(list){
+function spitOutTheWords(){
     let out = document.getElementById("output");
     out.innerHTML = "";
     let total = 0;
-    list.forEach(element => {
-        out.innerHTML += `Found: ${element} <br>`;
-        total++;
+
+    const bigOnly = document.getElementById("normal-check").checked;
+
+    wordList.forEach(element => {
+        if(bigOnly){
+            if(element.length>=5){
+                out.innerHTML += `${element} <br>`;
+                total++;
+            }
+        }
+        else{
+            out.innerHTML += `${element} <br>`;
+            total++;
+        }
     });
+
     let trouble = document.getElementById("bad-output");
     trouble.innerHTML = "";
     let bad = 0;
     badWordList.forEach(element => {
-        for(var i = 0; i<library2.length;i++){
-            if(element.toUpperCase() == library2[i].toUpperCase()){
-                //console.log(`YES! The found word is: ${element}`);
-                trouble.innerHTML += `Found: ${element} <br>`;
-                bad++;
-            }
-        }
+        trouble.innerHTML += `${element} <br>`;
+        bad++;
     });
+
+    out.innerHTML += `${total} words found`;
+    trouble.innerHTML += `${bad} bad words found`;
 }
 
-function checkAll(){
-    setTimeout(checkLibrary("normal"),1000);
-    setTimeout(checkLibrary("bad"),2000);
-}
-
-function checkLibrary(inst){
-
-    const start = performance.now();
-    let trouble = document.getElementById("bad-output");
-    let out = document.getElementById("output");
-
-    out.innerHTML = "";  
-    trouble.innerHTML = "";
-
-    let bad = 0;
-    let total = 0;
-
-    if(inst == "normal"){
-        wordList.length = 0;
-        wordList = generateCombinations(grid, dictionaryTrie);
-
-        let normalDictionaryActive = document.getElementById("normal-check").checked;
-
-        if(normalDictionaryActive){
-            wordList.forEach(element => {
-                for(var i = 0; i<library.length;i++){
-                    if(element == library[i]){
-                        //console.log(`YES! The found word is: ${element}`);
-                        out.innerHTML += `Found: ${element} <br>`;
-                        total++;
-                    }
-                }
-            });
-        }
-        else{
-            out.innerHTML = "Normal not checked";
-        }
-    }
-    else if(inst == "bad"){
-        badWordList.length = 0;
-        badWordList = generateCombinations(grid, badTrie);
-
-        badWordList.forEach(element => {
-            for(var i = 0; i<library2.length;i++){
-                if(element.toUpperCase() == library2[i].toUpperCase()){
-                    //console.log(`YES! The found word is: ${element}`);
-                    trouble.innerHTML += `Found: ${element} <br>`;
-                    bad++;
-                }
-            }
-        });
-    }
-
-    trouble.innerHTML += `${bad} bad words found.`;
-    out.innerHTML += `${total} words found.`;
-    const elapsed = (performance.now() - start);
-    document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
+function showResults(){
+    spitOutTheWords();
 }
 //  length = 3 
 //  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
 //                                                                                                                          generate directions for 2  [-6, 10, 1, 3]   Possible [10, 1, 3]
+
+
+document.addEventListener("DOMContentLoaded", function(){
+    document.getElementById("normal-check").addEventListener("click", function() {
+        console.log("changed");
+        showResults()
+    });
+});
 

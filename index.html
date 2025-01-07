@@ -6,6 +6,13 @@
 <script src="tools2.js"></script>
 <br><br>
     <div class="panel">
+        <div class="dropdown-container">
+            <label for="grid-size">Select Grid Size: </label>
+            <select id="grid-size" onchange="updateGridSize()">
+              <option value="8" selected>8 by 8</option>
+              <option value="10">10 by 10</option>
+            </select>
+          </div>
         <div class="button" onclick="addRow()">Add row</div>
         <div class="puzzle-create" id="puzzle-create">
             <label for="row1">Row 1: </label>
@@ -16,9 +23,9 @@
             <div id="title">Puzzle</div>
             <div id="puzzle">Example</div>
         </div>
-        
+        <!--<canvas id="puzzleCanvas" height= "300px" width="300px"></canvas>-->
         <div class="script" id="script"></div>
-        <div class="button" id="button" onclick="checkAll()">Check</div>
+        <div class="button" id="button" onclick="update()">Check</div>
         <div class="library-select">
             <input type="checkbox" id="normal-check" checked>
             <label for="normal-check">Check 5-Letter-Words-and-Up Library</label>
