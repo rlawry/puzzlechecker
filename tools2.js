@@ -114,7 +114,7 @@ function populate(){
 
 function init(){
     const start = performance.now();
-    addRow();
+    updateGridSize();
     populate();
     loadTrie();
 
