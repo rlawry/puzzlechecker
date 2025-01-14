@@ -99,17 +99,23 @@ function loadTrie(){
     console.log(badCount + " bad words in Trie");
 }
 
-function populate(){
-    let place = document.getElementById("puzzle");
-    place.innerHTML = "";
-    let line = 0;
-    while(line<grid.length){
-        for(let i=0; i<grid[line].length;i++){
-            place.innerHTML += grid[line][i];
-        }
-        place.innerHTML += "<br />";
-        line+=1;
-    }
+function populate() {
+    const place = document.getElementById("puzzle");
+    place.innerHTML = ""; // Clear existing content
+
+    grid.forEach((row, rowIndex) => {
+        const rowDiv = document.createElement("div"); // Create a div for each row
+        row.forEach((letter, colIndex) => {
+            const cell = document.createElement("span");
+            cell.textContent = letter; // Set the letter as the cell content
+            cell.id = `cell-${rowIndex}-${colIndex}`; // Assign a unique ID using row and col
+            cell.className = "puzzle-cell"; // Optional: Add a class for styling
+            rowDiv.appendChild(cell); // Append the cell to the row div
+        });
+        place.appendChild(rowDiv); // Append the row div to the puzzle container
+    });
+
+    console.log("Puzzle grid populated with cells.");
 }
 
 function init(){
@@ -265,26 +271,30 @@ function sanitizeGrid() {
 
 function generateCombinations(grid, dictTrie) {
     const result = new Set();
-    //depth-first-search function, recursive
 
-    function dfs(row, col, path, length, visited) {
+    function dfs(row, col, path, positions, length, visited) {
         visited[row][col] = true;
 
         const currentCombination = path.join('');
-        
-        if(dictTrie.isWord(currentCombination)){
-            result.add(currentCombination);
+        const currentPositions = [...positions, [row, col]];
+
+        // If the current combination is a word, store it in the result
+        if (dictTrie.isWord(currentCombination)) {
+            result.add({ word: currentCombination, positions: [...currentPositions] });
         }
+
+        // Continue exploring neighbors if the current path is shorter than the maximum length
         if (path.length < length) {
             const directions = [-1, 0, 1];
             for (const dx of directions) {
                 for (const dy of directions) {
                     const newX = row + dx;
                     const newY = col + dy;
+
                     if (isValidMove(newX, newY, row, col) && !visited[newX][newY]) {
                         const tempTest = currentCombination + grid[newX][newY];
-                        if(dictTrie.isAnyWordStartingWith(tempTest)){
-                            dfs(newX, newY, path.concat(grid[newX][newY]), length, visited, dictTrie);
+                        if (dictTrie.isAnyWordStartingWith(tempTest)) {
+                            dfs(newX, newY, path.concat(grid[newX][newY]), currentPositions, length, visited);
                         }
                     }
                 }
@@ -296,17 +306,14 @@ function generateCombinations(grid, dictTrie) {
 
     const rows = grid.length;
     const cols = grid[0].length;
-    const visited = new Array(rows);
-    for (let i = 0; i < rows; i++) {
-        visited[i] = new Array(cols);
-        for(let j = 0; j<cols; j++) {
-            visited[i][j] = false;
-        }
-    }
+    const visited = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+    // Maximum possible path length is the total number of cells in the grid
+    const maxLength = rows * cols;
 
     for (let i = 0; i < rows; i++) {
         for (let j = 0; j < cols; j++) {
-            dfs(i, j, [grid[i][j]], rows*cols, visited, dictTrie);
+            dfs(i, j, [grid[i][j]], [], maxLength, visited);
         }
     }
 
@@ -324,36 +331,32 @@ function isValidMove(row, col, prevRow, prevCol) {
     return row >= 0 && row < grid.length && col >= 0 && col < grid[0].length && ((row === prevRow && Math.abs(col - prevCol) === 1) || (col === prevCol && Math.abs(row - prevRow) === 1));
 }
 
-function spitOutTheWords(){
+function spitOutTheWords() {
     let out = document.getElementById("output");
     out.innerHTML = "";
     let total = 0;
 
     const bigOnly = document.getElementById("normal-check").checked;
 
-    wordList.forEach(element => {
-        if(bigOnly){
-            if(element.length>=5){
-                out.innerHTML += `${element} <br>`;
-                total++;
-            }
-        }
-        else{
-            out.innerHTML += `${element} <br>`;
+    wordList.forEach((entry, index) => {
+        // Entry is already an object; no need to parse
+        const { word, positions } = entry; 
+        if (!bigOnly || word.length >= 5) {
+            const wordItem = document.createElement("div");
+            wordItem.textContent = `${word}`;
+            wordItem.classList.add("hoverable-word");
+            wordItem.dataset.index = index; // Store index to track hover
+            out.appendChild(wordItem);
             total++;
         }
     });
 
-    let trouble = document.getElementById("bad-output");
-    trouble.innerHTML = "";
-    let bad = 0;
-    badWordList.forEach(element => {
-        trouble.innerHTML += `${element} <br>`;
-        bad++;
-    });
+    const performance = document.createElement("div");
+    performance.textContent = `${total} words found`;
+    out.appendChild(performance);
 
-    out.innerHTML += `${total} words found`;
-    trouble.innerHTML += `${bad} bad words found`;
+    // Attach hover event listeners to handle word highlighting
+    attachHoverListeners();
 }
 
 function showResults(){
@@ -371,3 +374,49 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 });
 
+function attachHoverListeners() {
+    const wordElements = document.querySelectorAll(".hoverable-word");
+    console.log("Hover listeners attached.");
+    wordElements.forEach((element) => {
+        const index = element.dataset.index;
+        
+        // Ensure index exists and is valid
+        if (wordList[index]) {
+            const wordData = wordList[index]; // Access the word object from wordList
+            const wordText = wordData.word; // Extract the word text
+            const positions = wordData.positions; // Extract the positions
+
+            console.log(`Word "${wordText}" linked with positions:`, positions);
+
+            element.addEventListener("mouseover", () => {
+                console.log(`Hovered over word: "${wordText}"`);
+                highlightWord(positions);
+            });
+
+            element.addEventListener("mouseout", () => {
+                clearHighlights();
+            });
+        } else {
+            console.error(`Invalid word index: ${index}`);
+        }
+    });
+}
+
+function highlightWord(positions) {
+    console.log("TRIGGERED");
+    positions.forEach(([row, col]) => {
+        const cell = document.querySelector(`#cell-${row}-${col}`);
+        if (cell) {
+            cell.classList.add("highlighted");
+            console.log(`Highlighted cell: cell-${row}-${col}`);
+        } else {
+            console.error(`Cell not found for ID: cell-${row}-${col}`);
+        }
+    });
+}
+
+function clearHighlights() {
+    document.querySelectorAll(".highlighted").forEach((cell) => {
+        cell.classList.remove("highlighted");
+    });
+}

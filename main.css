@@ -106,4 +106,26 @@ input{
 .output{
     background-color: lightblue;
     padding: 5px;
+    max-height: 200px; /* Adjust height as needed */
+    overflow-y: auto; /* Enable vertical scrolling */
+    border: 1px solid #ccc; /* Optional: Add a border for clarity */
+    padding: 10px; /* Optional: Add padding for better aesthetics */
+    font-family: Arial, sans-serif; /* Optional: Font styling */
+}
+
+.grid-cell {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-family: monospace;
+    margin: 1px;
+    border: 1px solid #ddd; /* Optional, for a grid-like appearance */
+}
+
+.highlighted {
+    background-color: red; /* Or any color you want for the highlight */
+    color: white; /* Adjust text color if necessary */
+    font-weight: bold; /* Optional: make highlighted text stand out */
 }
