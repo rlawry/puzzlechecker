@@ -357,6 +357,7 @@ function spitOutTheWords() {
 
     // Attach hover event listeners to handle word highlighting
     attachHoverListeners();
+    attachClickListeners();
 }
 
 function showResults(){
@@ -376,47 +377,191 @@ document.addEventListener("DOMContentLoaded", function(){
 
 function attachHoverListeners() {
     const wordElements = document.querySelectorAll(".hoverable-word");
-    console.log("Hover listeners attached.");
+
     wordElements.forEach((element) => {
         const index = element.dataset.index;
-        
-        // Ensure index exists and is valid
-        if (wordList[index]) {
-            const wordData = wordList[index]; // Access the word object from wordList
-            const wordText = wordData.word; // Extract the word text
-            const positions = wordData.positions; // Extract the positions
+        const { positions } = wordList[index];
 
-            console.log(`Word "${wordText}" linked with positions:`, positions);
+        element.addEventListener("mouseover", () => {
+            // Only apply hover highlight if the word is not clicked
+            if (!element.classList.contains("clicked")) {
+                highlightWord(positions, wordList[index].word, false); // Temporary highlight
+                console.log("ENTERED");
+            }
+        });
 
-            element.addEventListener("mouseover", () => {
-                console.log(`Hovered over word: "${wordText}"`);
-                highlightWord(positions);
-            });
-
-            element.addEventListener("mouseout", () => {
-                clearHighlights();
-            });
-        } else {
-            console.error(`Invalid word index: ${index}`);
-        }
+        element.addEventListener("mouseout", () => {
+            // Clear only temporary highlights (hover effects)
+            clearTemporaryHighlights();
+            console.log("LEFT");
+        });
     });
 }
 
-function highlightWord(positions) {
-    console.log("TRIGGERED");
+let wordClasses = {};
+
+function highlightWord(positions, word, isPersistent) {
+
+    let colorClass = wordClasses[word];
+    console.log(word);
+    // If this word has no class yet, create a random class for it
+    if (!colorClass) {
+        colorClass = getRandomColorClass(word);
+        wordClasses[word] = colorClass; // Store the class name for this word
+        createRandomColorClass(colorClass); // Add the class dynamically to the CSS
+    }
+
     positions.forEach(([row, col]) => {
-        const cell = document.querySelector(`#cell-${row}-${col}`);
+        const cell = document.getElementById(`cell-${row}-${col}`);
         if (cell) {
-            cell.classList.add("highlighted");
-            console.log(`Highlighted cell: cell-${row}-${col}`);
-        } else {
-            console.error(`Cell not found for ID: cell-${row}-${col}`);
+            // Mark cell as persistent if applicable
+            if (isPersistent) {
+                cell.classList.add(colorClass);
+            }
+            else if(!isPersistent){
+                cell.classList.add("temp-highlight");    
+            }
         }
     });
 }
 
-function clearHighlights() {
-    document.querySelectorAll(".highlighted").forEach((cell) => {
-        cell.classList.remove("highlighted");
+function addClassToFront(element, newClass) {
+    // Check if the class already exists
+    if (element.classList.contains(newClass)) {
+        // Remove the class to re-add it at the front
+        element.classList.remove(newClass);
+    }
+
+    // Add the class to the front of the list
+    element.className = `${newClass} ${element.className}`.trim();
+}
+
+function clearHighlights(positions, word) {
+    positions.forEach(([row, col]) => {
+        const cell = document.getElementById(`cell-${row}-${col}`);
+        if (cell) {
+            cell.style.backgroundColor = ""; // Reset background color
+            cell.classList.forEach(function(className) {
+                if (className.startsWith(`${word}`)) {
+                  cell.classList.remove(className);
+                  console.log(className + " removed");
+                }
+            });
+        }  
     });
 }
+
+function clearTemporaryHighlights() {
+    const cells = document.querySelectorAll(".puzzle-cell");
+    cells.forEach((cell) => {
+        cell.classList.remove("temp-highlight"); // Reset background color
+    });
+    
+}
+
+function attachClickListeners() {
+    const wordElements = document.querySelectorAll(".hoverable-word");
+
+    wordElements.forEach((element) => {
+        const index = element.dataset.index;
+        const { positions } = wordList[index];
+        let isHighlighted = false;
+        let highlightColor = "";
+
+        element.addEventListener("click", () => {
+            console.log("CLICKED");
+            if (isHighlighted) {
+                // Remove persistent highlight
+                console.log(wordList[index].word + " clicked");
+                clearHighlights(positions, wordList[index].word); // Clear specific positions
+                isHighlighted = false;
+                element.style.backgroundColor = ""; // Reset word background
+                element.classList.remove("clicked");
+                element.classList.remove("persist-highlight");
+            } else {
+                // Apply persistent highlight with random color
+                highlightColor = getRandomColorClass(wordList[index].word);
+                highlightWord(positions, wordList[index].word, true); // Persistent highlight
+                element.classList.add("persist-highlight");
+                isHighlighted = true;
+            }
+        });
+    });
+}
+
+function getRandomColorClass(word) {
+    const letters = '0123456789ABCDEF';
+    let colorClass = `${word}-`;
+    for (let i = 0; i < 6; i++) {
+        colorClass += letters[Math.floor(Math.random() * 16)];
+    }
+    return colorClass;
+}
+
+function createRandomColorClass(colorClass) {
+    // Find or create a dedicated <style> block
+    let styleElement = document.querySelector('#dynamic-styles');
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'dynamic-styles';
+        document.head.appendChild(styleElement);
+    }
+
+    // Access the stylesheet object
+    const sheet = styleElement.sheet;
+
+    // Generate a random color
+    const randomColor = getRandomColor();
+
+    // Safely add or replace the rule
+    try {
+        // Check for and remove an existing rule for the class
+        for (let i = 0; i < sheet.cssRules.length; i++) {
+            if (sheet.cssRules[i].selectorText === `.${colorClass}`) {
+                sheet.deleteRule(i);
+                break;
+            }
+        }
+
+        // Add the new rule
+        sheet.insertRule(`.${colorClass} { background-color: ${randomColor}; }`, sheet.cssRules.length);
+    } catch (e) {
+        console.error('Failed to modify the stylesheet:', e);
+    }
+    console.log("Current rules in the dynamic stylesheet:");
+    for (let i = 0; i < sheet.cssRules.length; i++) {
+        console.log(sheet.cssRules[i].cssText); // Output the rule's text (e.g., .colorClass { background-color: #ff0000; })
+    }
+}
+
+function getRandomColor() {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return `#${randomColor.padStart(6, '0')}`;
+}
+
+
+// function getRandomColor() {
+//     const letters = '0123456789ABCDEF';
+//     let color = '#';
+//     for (let i = 0; i < 6; i++) {
+//         color += letters[Math.floor(Math.random() * 16)];
+//     }
+//     return color;
+// }
+
+function recastClassOrder(element) {
+    // Capture the current class list
+    const classList = Array.from(element.classList);
+  
+    // Optionally: Sort or reorder the list as needed
+    // For this example, we're simply keeping the order as is
+  
+    // Remove all classes
+    element.className = '';
+  
+    // Re-add classes in the original order
+    classList.forEach(className => {
+        element.classList.add(className);
+        console.log(className + " classname added");
+    });
+  }

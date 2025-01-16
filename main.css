@@ -111,6 +111,7 @@ input{
     border: 1px solid #ccc; /* Optional: Add a border for clarity */
     padding: 10px; /* Optional: Add padding for better aesthetics */
     font-family: Arial, sans-serif; /* Optional: Font styling */
+    cursor: pointer;
 }
 
 .grid-cell {
@@ -128,4 +129,21 @@ input{
     background-color: red; /* Or any color you want for the highlight */
     color: white; /* Adjust text color if necessary */
     font-weight: bold; /* Optional: make highlighted text stand out */
+}
+
+.hoverable-word {
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition for background changes */
+}
+
+.hoverable-word:hover {
+    background-color: #e0e0e0; /* Light gray on hover */
+}
+
+.temp-highlight{
+    background-color: yellow !important;
+}
+
+.persist-highlight {
+    background-color: #007bff;
 }
