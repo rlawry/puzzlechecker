@@ -333,8 +333,10 @@ function isValidMove(row, col, prevRow, prevCol) {
 
 function spitOutTheWords() {
     let out = document.getElementById("output");
+    let badOut = document.getElementById("bad-output");
     out.innerHTML = "";
     let total = 0;
+    let badTotal = 0;
 
     const bigOnly = document.getElementById("normal-check").checked;
 
@@ -350,7 +352,16 @@ function spitOutTheWords() {
             total++;
         }
     });
-
+    badWordList.forEach((entry, index) => {
+        // Entry is already an object; no need to parse
+        const { word, positions } = entry; 
+            const wordItem = document.createElement("div");
+            wordItem.textContent = `${word}`;
+            wordItem.classList.add("hoverable-word");
+            wordItem.dataset.index = index; // Store index to track hover
+            badOut.appendChild(wordItem);
+            badTotal++;
+    });
     const performance = document.createElement("div");
     performance.textContent = `${total} words found`;
     out.appendChild(performance);
