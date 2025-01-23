@@ -27,11 +27,13 @@
         <div class="button" id="button" onclick="update()">Check</div>
         <div class="library-select">
             <input type="checkbox" id="normal-check" checked>
-            <label for="normal-check">Show Only 5-Letter-Words-and-Up Results</label>
+            <label for="normal-check">Show Only 5-Letter-Words-and-Up Results</label><br>
+            <input type="checkbox" id="plural-exclusion" unchecked>
+            <label for="plural-exclusion">Exclude words ending in S</label>
         </div>
         <div class="results">
-            <div class="output" id="output">[Check for found words]</div>
-            <div class="bad-output" id="bad-output">Ready to Check</div>
+            <div class="output" id="output"><span id="good-total">[Check for found words]</span></div>
+            <div class="bad-output" id="bad-output"><span id="bad-total">Ready to Check</span></div>
             <div class="performance" id="performance">Time of Results</div>
         </div>
     </div>

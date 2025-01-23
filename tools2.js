@@ -133,7 +133,7 @@ function init(){
     spitOutTheWords();
 
     const elapsed = (performance.now() - start);
-    document.getElementById("performance").innerHTML = `Time taken: ${elapsed/1000} seconds`;
+    document.getElementById("performance").innerHTML = `Time taken: ${(elapsed/1000).toFixed(4)} seconds`;
 }
 
 function updateGridSize(){
@@ -219,8 +219,6 @@ function update(){
         document.getElementById("output").innerHTML = "Updated";
         document.getElementById("bad-output").innerHTML = "Clear";
 
-        //console.log(grid[0][5].charCodeAt(0) + " char");
-
         showResults();
     }
     else{
@@ -251,7 +249,7 @@ function sanitizeGrid() {
     const sanitizedGrid = grid.map(row =>
         row.map(char => {
             const charCode = char.codePointAt(0); // Get the Unicode code point of the character
-            console.log(`Processing character: ${char} (Unicode: ${charCode})`);
+            //console.log(`Processing character: ${char} (Unicode: ${charCode})`);
 
             // Use the code point to lookup in the map
             if (greekToLatinMap[charCode]) {
@@ -335,21 +333,33 @@ function spitOutTheWords() {
     let out = document.getElementById("output");
     let badOut = document.getElementById("bad-output");
     out.innerHTML = "";
+    const titleWords = document.createElement("span");
+    titleWords.id = 'good-total';
+    badOut.innerHTML = "";
+    const titleBad = document.createElement("span");
+    titleBad.id = 'bad-total';
     let total = 0;
     let badTotal = 0;
 
     const bigOnly = document.getElementById("normal-check").checked;
+    const excludePlurals = document.getElementById("plural-exclusion").checked; // New checkbox for excluding plurals
 
     wordList.forEach((entry, index) => {
         // Entry is already an object; no need to parse
         const { word, positions } = entry; 
-        if (!bigOnly || word.length >= 5) {
-            const wordItem = document.createElement("div");
-            wordItem.textContent = `${word}`;
-            wordItem.classList.add("hoverable-word");
-            wordItem.dataset.index = index; // Store index to track hover
-            out.appendChild(wordItem);
-            total++;
+
+        const isPlural = word.endsWith("S");
+
+        if (!(excludePlurals && isPlural)) {
+            //console.log(isPlural + " word is " + word);
+            if (!bigOnly || word.length >= 5) {
+                const wordItem = document.createElement("div");
+                wordItem.textContent = `${word}`;
+                wordItem.classList.add("good-hoverable-word");
+                wordItem.dataset.index = index; // Store index to track hover
+                out.appendChild(wordItem);
+                total++;
+            } 
         }
     });
     badWordList.forEach((entry, index) => {
@@ -357,17 +367,19 @@ function spitOutTheWords() {
         const { word, positions } = entry; 
             const wordItem = document.createElement("div");
             wordItem.textContent = `${word}`;
-            wordItem.classList.add("hoverable-word");
+            wordItem.classList.add("bad-hoverable-word");
             wordItem.dataset.index = index; // Store index to track hover
             badOut.appendChild(wordItem);
             badTotal++;
     });
-    const performance = document.createElement("div");
-    performance.textContent = `${total} words found`;
-    out.appendChild(performance);
+    titleWords.textContent = `${total} words found`;
+    out.insertBefore(titleWords, out.firstChild);
+    titleBad.textContent = `${badTotal} bad words found`;
+    badOut.insertBefore(titleBad, badOut.firstChild)
 
     // Attach hover event listeners to handle word highlighting
     attachHoverListeners();
+    attachClickListeners();
 }
 
 function showResults(){
@@ -381,53 +393,289 @@ function showResults(){
 document.addEventListener("DOMContentLoaded", function(){
     document.getElementById("normal-check").addEventListener("click", function() {
         console.log("changed");
-        showResults()
+        showResults();
+    });
+    document.getElementById("plural-exclusion").addEventListener("click", function() {
+        console.log("changed butts");
+        showResults();
     });
 });
 
 function attachHoverListeners() {
-    const wordElements = document.querySelectorAll(".hoverable-word");
-    console.log("Hover listeners attached.");
+    const goodWordElements = document.querySelectorAll(".good-hoverable-word");
+    const badWordElements = document.querySelectorAll(".bad-hoverable-word");
+    goodWordElements.forEach((element) => {
+        const index = element.dataset.index;
+        const { positions } = wordList[index];
+
+        element.addEventListener("mouseover", () => {
+            // Only apply hover highlight if the word is not clicked
+            if (!element.classList.contains("clicked")) {
+                highlightWord(positions, wordList[index].word, false); // Temporary highlight
+                //console.log("ENTERED");
+            }
+        });
+
+        element.addEventListener("mouseout", () => {
+            // Clear only temporary highlights (hover effects)
+            clearTemporaryHighlights();
+            //console.log("LEFT");
+        });
+    });
+    badWordElements.forEach((element) => {
+        const index = element.dataset.index;
+        const { positions } = badWordList[index];
+
+        element.addEventListener("mouseover", () => {
+            // Only apply hover highlight if the word is not clicked
+            if (!element.classList.contains("clicked")) {
+                highlightWord(positions, badWordList[index].word, false); // Temporary highlight
+                //console.log("ENTERED");
+            }
+        });
+
+        element.addEventListener("mouseout", () => {
+            // Clear only temporary highlights (hover effects)
+            clearTemporaryHighlights();
+            //console.log("LEFT");
+        });
+    });
+}
+
+let wordClasses = {};
+
+function highlightWord(positions, word, isPersistent) {
+
+    let colorClass = wordClasses[word];
+    if(isPersistent){
+        bumpClass(colorClass);
+    }
+    //console.log(word);
+    // If this word has no class yet, create a random class for it
+    if (!colorClass) {
+        colorClass = getRandomColorClass(word);
+        wordClasses[word] = colorClass; // Store the class name for this word
+        createRandomColorClass(colorClass); // Add the class dynamically to the CSS
+    }
+
+    positions.forEach(([row, col]) => {
+        const cell = document.getElementById(`cell-${row}-${col}`);
+        if (cell) {
+            // Mark cell as persistent if applicable
+            if (isPersistent) {
+                cell.classList.add(colorClass);
+            }
+            else if(!isPersistent){
+                cell.classList.add("temp-highlight");    
+            }
+        }
+    });
+}
+
+// function addClassToFront(element, newClass) {
+//     // Check if the class already exists
+//     if (element.classList.contains(newClass)) {
+//         // Remove the class to re-add it at the front
+//         element.classList.remove(newClass);
+//     }
+
+//     // Add the class to the front of the list
+//     element.className = `${newClass} ${element.className}`.trim();
+// }
+
+function clearHighlights(positions, word) {
+    positions.forEach(([row, col]) => {
+        const cell = document.getElementById(`cell-${row}-${col}`);
+        if (cell) {
+            cell.style.backgroundColor = ""; // Reset background color
+            cell.classList.forEach(function(className) {
+                if (className.startsWith(`${word}`)) {
+                  cell.classList.remove(className);
+                  console.log(className + " removed");
+                }
+            });
+        }  
+    });
+}
+
+function clearTemporaryHighlights() {
+    const cells = document.querySelectorAll(".puzzle-cell");
+    cells.forEach((cell) => {
+        cell.classList.remove("temp-highlight"); // Reset background color
+    });
+    
+}
+
+function attachClickListeners() {
+    const wordElements = document.querySelectorAll('[class*="hoverable-word"]');
     wordElements.forEach((element) => {
         const index = element.dataset.index;
-        
-        // Ensure index exists and is valid
-        if (wordList[index]) {
-            const wordData = wordList[index]; // Access the word object from wordList
-            const wordText = wordData.word; // Extract the word text
-            const positions = wordData.positions; // Extract the positions
+        const { positions } = wordList[index];
+        let isHighlighted = false;
+        //let highlightColor = "";
 
-            console.log(`Word "${wordText}" linked with positions:`, positions);
-
-            element.addEventListener("mouseover", () => {
-                console.log(`Hovered over word: "${wordText}"`);
-                highlightWord(positions);
-            });
-
-            element.addEventListener("mouseout", () => {
-                clearHighlights();
-            });
-        } else {
-            console.error(`Invalid word index: ${index}`);
-        }
+        element.addEventListener("click", () => {
+            console.log("CLICKED");
+            if (isHighlighted) {
+                // Remove persistent highlight
+                console.log(wordList[index].word + " clicked");
+                clearHighlights(positions, wordList[index].word); // Clear specific positions
+                isHighlighted = false;
+                element.style.backgroundColor = ""; // Reset word background
+                element.classList.remove("clicked");
+                element.classList.remove("persist-highlight");
+            } else {
+                // Apply persistent highlight with random color
+                //highlightColor = getRandomColorClass(wordList[index].word);
+                highlightWord(positions, wordList[index].word, true); // Persistent highlight
+                element.classList.add("persist-highlight");
+                isHighlighted = true;
+            }
+            var styleElement = document.getElementById("dynamic-styles");
+            const sheet = styleElement.sheet;
+            // console.log("Current order of dynamic stylesheet:");
+            // for (let i = 0; i < sheet.cssRules.length; i++) {
+            //     console.log(sheet.cssRules[i].cssText); // Output the rule's text (e.g., .colorClass { background-color: #ff0000; })
+            // }
+        });
     });
 }
 
-function highlightWord(positions) {
-    console.log("TRIGGERED");
-    positions.forEach(([row, col]) => {
-        const cell = document.querySelector(`#cell-${row}-${col}`);
-        if (cell) {
-            cell.classList.add("highlighted");
-            console.log(`Highlighted cell: cell-${row}-${col}`);
+function getRandomColorClass(word) {
+    const letters = 'ABCDEF0123456789'; // Ensures that values will start from 'A'
+    let colorClass = `${word}-`;
+    for (let i = 0; i < 6; i++) {
+        if (i % 2 === 0) {
+            // Force the first character of each color component to be at least 'A'
+            colorClass += letters[Math.floor(Math.random() * 6)]; // Only 'A' to 'F'
         } else {
-            console.error(`Cell not found for ID: cell-${row}-${col}`);
+            // Second character of each color component can be any valid hexadecimal digit
+            colorClass += letters[Math.floor(Math.random() * 10)];
         }
-    });
+    }
+    return colorClass;
 }
 
-function clearHighlights() {
-    document.querySelectorAll(".highlighted").forEach((cell) => {
-        cell.classList.remove("highlighted");
+function createRandomColorClass(colorClass) {
+    // Find or create a dedicated <style> block
+    let styleElement = document.querySelector('#dynamic-styles');
+    if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'dynamic-styles';
+        document.head.appendChild(styleElement);
+    }
+
+    // Access the stylesheet object
+    const sheet = styleElement.sheet;
+
+    // Generate a random color
+    const randomColor = getRandomColor();
+
+    // Safely add or replace the rule
+    try {
+        // Check for and remove an existing rule for the class
+        for (let i = 0; i < sheet.cssRules.length; i++) {
+            if (sheet.cssRules[i].selectorText === `.${colorClass}`) {
+                sheet.deleteRule(i);
+                break;
+            }
+        }
+
+        // Add the new rule
+        sheet.insertRule(`.${colorClass} { background-color: ${randomColor}; color: white;}`, sheet.cssRules.length);
+    } catch (e) {
+        console.error('Failed to modify the stylesheet:', e);
+    }
+    // console.log("Current rules in the dynamic stylesheet:");
+    // for (let i = 0; i < sheet.cssRules.length; i++) {
+    //     console.log(sheet.cssRules[i].cssText); // Output the rule's text (e.g., .colorClass { background-color: #ff0000; })
+    // }
+}
+
+function getRandomColor() {
+    const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return `#${randomColor.padStart(6, '0')}`;
+}
+
+//Last class clicked needs to be at the END of the dynamic stylesheet.
+//it will be implemented ABOVE all others.
+
+function bumpClass(prioritizedClass) {
+    //prioritized means LAST on the sheet.  That's all we're doing here.
+    //manifest the real rules list first
+    const styleList = document.getElementById("dynamic-styles");
+    const sheetOfRules = styleList.sheet;
+    if(!styleList){console.log("Nothing to use!");}
+    
+    //create the new list from which we will make the new list.
+    let stylesPresent = [];
+
+    for(let i = 0; i< sheetOfRules.cssRules.length; i++){
+        stylesPresent.push(sheetOfRules.cssRules[i].cssText);
+    }
+
+    //grabbed all present styles on the dynamic list
+    //now remove them all.
+
+    while( sheetOfRules.cssRules.length > 0 ){
+        sheetOfRules.deleteRule(0);
+    }
+    //console.log("Deleted rules");
+    //console.log(sheetOfRules);
+
+    //things are saved, now we will reinsert them.
+
+    //console.log("My saved contents:");
+    //console.log(stylesPresent);
+    //console.log("LOOKING for " + prioritizedClass);
+    //console.log("are it? " + classExists(prioritizedClass, stylesPresent));
+    //console.log("I got this: " + getEntireLine(prioritizedClass, stylesPresent));
+    
+    //the one that needs to be LAST is grabbed.
+    
+    const styleToAddLast = getEntireLine(prioritizedClass, stylesPresent);
+
+    //iterate through the stylesPresent and add them to the
+    //real rules list.
+
+    stylesPresent.forEach(rule => {
+        if(rule != styleToAddLast){
+            sheetOfRules.insertRule(rule);
+            //console.log("rule added: " + rule);
+        }
     });
+
+    //insert the important one last
+    sheetOfRules.insertRule(styleToAddLast, sheetOfRules.cssRules.length);
+    //console.log("rule added " + styleToAddLast);
+    //console.log("success?");
+    //console.log(sheetOfRules.cssRules);
+}
+
+function fetchStyleTextBySelector(selector, sheetTest) {
+    // Get all stylesheets in the document
+    const targetSheet = sheetTest;
+    const contents = targetSheet.sheet;
+    //console.log(contents.cssRules.length + " css length");
+    for (let i = 0; i < contents.cssRules.length; i++) {
+        const rule = contents.cssRules[i];
+        //console.log("Looking for selector in fetch");
+        //console.log(rule.selectorText);
+        // Check if the rule matches the desired selector
+        if (rule.selectorText === `.${selector}`) {
+            return rule.cssText; // Return the full CSS rule text
+        }
+    }
+    // If no match is found
+    return `No style found for selector: ${selector}`;
+}
+
+function classExists(selector, styles) {
+    // Loop through the array to find a match
+    return styles.some(style => style.includes(selector));
+}
+
+function getEntireLine(selector, styles) {
+    // Find the line that includes the given selector
+    return styles.find(style => style.includes(selector)) || null;
 }

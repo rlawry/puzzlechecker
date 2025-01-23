@@ -1,5 +1,6 @@
 *{
     font-family: 'Courier New', Courier, monospace;
+    box-sizing: border-box;
 }
 
 #title{
@@ -96,6 +97,12 @@ input{
     padding: 5px;
 }
 
+#good-total{
+    font-weight: 800;
+    cursor: pointer;
+    outline: 2px black;
+}
+
 .performance{
     background-color: palegreen;
     color: green;
@@ -111,6 +118,7 @@ input{
     border: 1px solid #ccc; /* Optional: Add a border for clarity */
     padding: 10px; /* Optional: Add padding for better aesthetics */
     font-family: Arial, sans-serif; /* Optional: Font styling */
+    cursor: pointer;
 }
 
 .grid-cell {
@@ -122,10 +130,33 @@ input{
     font-family: monospace;
     margin: 1px;
     border: 1px solid #ddd; /* Optional, for a grid-like appearance */
+    overflow: hidden;
 }
 
 .highlighted {
     background-color: red; /* Or any color you want for the highlight */
     color: white; /* Adjust text color if necessary */
     font-weight: bold; /* Optional: make highlighted text stand out */
+}
+
+.hoverable-word {
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Smooth transition for background changes */
+}
+
+.hoverable-word:hover {
+    background-color: #e0e0e0; /* Light gray on hover */
+}
+
+.temp-highlight{
+    background-color: yellow !important;
+    font-weight: 600;
+    color: black !important;
+    outline: 1px solid blue;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.persist-highlight {
+    background-color: #007bff;
 }
