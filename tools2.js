@@ -571,6 +571,22 @@ function createRandomColorClass(colorClass) {
     // Generate a random color
     const randomColor = getRandomColor();
 
+    // Calculate the brightness of the color
+    function calculateBrightness(hexColor) {
+        // Remove the '#' if it exists
+        const hex = hexColor.replace('#', '');
+        const r = parseInt(hex.slice(0, 2), 16); // Red component
+        const g = parseInt(hex.slice(2, 4), 16); // Green component
+        const b = parseInt(hex.slice(4, 6), 16); // Blue component
+
+        // Use the luminance formula
+        return 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+
+    // Determine font color (black or white)
+    const brightness = calculateBrightness(randomColor);
+    const fontColor = brightness > 128 ? 'black' : 'white';
+
     // Safely add or replace the rule
     try {
         // Check for and remove an existing rule for the class
@@ -581,15 +597,17 @@ function createRandomColorClass(colorClass) {
             }
         }
 
-        // Add the new rule
-        sheet.insertRule(`.${colorClass} { background-color: ${randomColor}; color: white;}`, sheet.cssRules.length);
+        // Add the new rule with the determined font color
+        sheet.insertRule(
+            `.${colorClass} { background-color: ${randomColor}; color: ${fontColor}; }`,
+            sheet.cssRules.length
+        );
     } catch (e) {
         console.error('Failed to modify the stylesheet:', e);
     }
-    // console.log("Current rules in the dynamic stylesheet:");
-    // for (let i = 0; i < sheet.cssRules.length; i++) {
-    //     console.log(sheet.cssRules[i].cssText); // Output the rule's text (e.g., .colorClass { background-color: #ff0000; })
-    // }
+
+    // Optional: Log for debugging
+    //console.log(`Assigned background-color: ${randomColor}, font color: ${fontColor}`);
 }
 
 function getRandomColor() {
