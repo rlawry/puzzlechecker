@@ -122,7 +122,7 @@ function init(){
     const start = performance.now();
     updateGridSize();
     populate();
-    loadTrie();
+    loadTrie();         // only needs to be done once.
 
     wordList.length = 0;
     wordList = generateCombinations(grid, dictionaryTrie);
@@ -202,10 +202,10 @@ function update(){
         }
         for(let i=0; i<grid.length; i++){
             for(let j=0;j<cols;j++){
-                grid[i][j] = all[i].value.charAt(j);
+                grid[i][j] = all[i].value.charAt(j).toUpperCase();
             }
         }
-
+        console.log(grid[1][1]);
         sanitizeGrid();
 
         populate();
@@ -219,7 +219,7 @@ function update(){
         document.getElementById("output").innerHTML = "Updated";
         document.getElementById("bad-output").innerHTML = "Clear";
 
-        showResults();
+        spitOutTheWords();
     }
     else{
 
@@ -382,9 +382,7 @@ function spitOutTheWords() {
     attachClickListeners();
 }
 
-function showResults(){
-    spitOutTheWords();
-}
+
 //  length = 3 
 //  Node1 = 0       generate directions [-8, 8, -1, 2]      Possible Directions [8, 2]       Secondary Nodes    [8, 2]      generate directions for 8  [0, 16, 7, 9]    Possible [16, 9]
 //                                                                                                                          generate directions for 2  [-6, 10, 1, 3]   Possible [10, 1, 3]
@@ -393,11 +391,11 @@ function showResults(){
 document.addEventListener("DOMContentLoaded", function(){
     document.getElementById("normal-check").addEventListener("click", function() {
         console.log("changed");
-        showResults();
+        spitOutTheWords();
     });
     document.getElementById("plural-exclusion").addEventListener("click", function() {
         console.log("changed butts");
-        showResults();
+        spitOutTheWords();
     });
 });
 
